@@ -54,7 +54,7 @@ end
 -- create all required UI elements for the client side
 function TrashMan.initUI()
     local res = getResolution();
-    local size = vec2(350, 390) 
+    local size = vec2(420, 500) 
     local menu = ScriptUI()
     window = menu:createWindow(Rect(res * 0.5 - size * 0.5, res * 0.5 + size * 0.5));
     menu:registerWindow(window, "Trash Man"%_t);
@@ -94,33 +94,33 @@ function TrashMan.initUI()
         py = py + pyDelta
     end
 
-	-- private // allianz
+    -- private // alliance
 	checkBoxAllianz[0] = window:createCheckBox(Rect(column2, py, column2 + 20, py + 20), "", "")
     window:createLabel(vec2(column2+25,py), "Alliance", 15 )
     py = py + pyDelta
 
+    local qFrame = window:createFrame(Rect(380, 10, 400, 30))
+    local qLabel = window:createLabel(vec2(380, 10), " ?", 15)
+    qLabel.tooltip = "Select which types of inventory items to mark as trash. These items will not be destroyed or immediately sold. Instead, the next time you visit the appropriate merchant they can be sold with the merchant's 'Sell Trash' button.\nItems that are marked as favorites will not get marked for trash!"%_t
+
+    local button1Rect = Rect(column2, py, column2 + 170, py + 30)
+    local button2Rect = Rect(column2 + 180, py, column2 + 350, py + 30)
+    local button1 = window:createButton(button1Rect, "Mark Selected"%_t, "onMarkTrashPressed")
+    local button2 = window:createButton(button2Rect, "Unmark All"%_t, "onUnmarkAllPressed")
+    button1.maxTextSize = 15
+    button2.maxTextSize = 15
+    py = py + pyDelta + 8
+
     window:createLabel(vec2(column1, py), "Tech level filter (optional)"%_t, 15)
     py = py + pyDelta
-    minTechBox = window:createComboBox(Rect(column2, py, column2 + 140, py + lineHeight), "")
-    maxTechBox = window:createComboBox(Rect(column2 + 160, py, column2 + 300, py + lineHeight), "")
-    minTechBox:addEntry("Min: Any"%_t)
-    maxTechBox:addEntry("Max: Any"%_t)
+    minTechBox = window:createComboBox(Rect(column2, py, column2 + 170, py + lineHeight), "")
+    maxTechBox = window:createComboBox(Rect(column2 + 180, py, column2 + 350, py + lineHeight), "")
+    minTechBox:addEntry("Min: 1"%_t)
+    maxTechBox:addEntry("Max: 52"%_t)
     for i = 1, 52 do
         minTechBox:addEntry("Min: " .. i)
         maxTechBox:addEntry("Max: " .. i)
     end
-
-    local qFrame = window:createFrame(Rect(310, 10, 330, 30))
-    local qLabel = window:createLabel(vec2(310, 10), " ?", 15)
-
-    --qFrame.position = vec2(260, 10)
-    --qLabel.position = qFrame.position
-    qLabel.tooltip = "Select which types of inventory items to mark as trash. These items will not be destroyed or immediately sold. Instead, the next time you visit the appropriate merchant they can be sold with the merchant's 'Sell Trash' button.\nItems that are marked as favorites will not get marked for trash!"%_t
-
-    local button1 = window:createButton(vsplit.left, "Mark Selected"%_t, "onMarkTrashPressed")
-    local button2 = window:createButton(vsplit.right, "Unmark All"%_t, "onUnmarkAllPressed")
-    button1.maxTextSize = 15
-    button2.maxTextSize = 15
 end
 
 -- private-start

@@ -17,7 +17,7 @@ meta =
     type = "mod",
 
     -- Description of your mod that will be displayed to players
-    description = "Revamped with new features and stability to work in the current Avorion version.",
+    description = "Revamped with new features and mod stability to work in the current Avorion version.",
 
     -- Insert all authors into this list
     authors = {"Stormbox"},

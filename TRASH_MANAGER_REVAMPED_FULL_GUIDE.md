@@ -1,7 +1,3 @@
-# Trash Manager Revamped
-
-Revamped plenty of things on this mod. Which is still a work-in-progress and under testing.. Taken over by Stormbox as the main developer for Trash Manager: <https://steamcommunity.com/sharedfiles/filedetails/?id=1788913474>
-
 # Trash Manager Revamped — Full Mod Guide
 
 ## Overview
@@ -92,11 +88,9 @@ If permissions are missing, the user receives a clear feedback message rather th
 ## 4) Mark and Unmark Actions
 
 ### Mark Selected
-
 Marks all inventory items that match the configured filters as trash.
 
 ### Unmark All
-
 Clears trash flags from marked items in the selected inventory context (private/alliance), allowing a full rollback when needed.
 
 ---
