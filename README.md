@@ -25,7 +25,7 @@ Instead, it marks selected items with Avorion’s trash flag so they can be sold
 
 ---
 
-## What the Mod Adds
+## What the Mod Adds (Latest Confirmed Working Build)
 
 ## 1) Bulk Trash Marking Interface
 
@@ -59,7 +59,7 @@ A major Revamped feature is optional filtering by item tech level.
 - Tech filtering is active by default with range 1–52.
 - Players can optionally customize Min/Max values to narrow what gets marked.
 
-### Supported behavior
+### Supported behavior (current confirmed implementation)
 
 For tech extraction, the script checks:
 
@@ -89,7 +89,7 @@ If permissions are missing, the user receives a clear feedback message rather th
 
 ---
 
-## 4) Mark and Unmark Actions
+## 4) Mark, Unmark, and Preview Actions
 
 ### Mark Selected
 
@@ -99,11 +99,19 @@ Marks all inventory items that match the configured filters as trash.
 
 Clears trash flags from marked items in the selected inventory context (private/alliance), allowing a full rollback when needed.
 
+### Preview (Confirmed Latest Flow)
+
+Preview runs the same active filters without changing inventory state and returns:
+- how many items would be marked
+- which scope is active (`private` or `alliance`)
+
+The preview label updates in the Trash Man UI with this result so players can verify filters before committing mark operations.
+
 ---
 
 ## UI Layout and Design Notes
 
-Recent layout improvements include:
+Confirmed current layout includes:
 
 - Larger window for better readability and future feature growth.
 - Tech level controls moved to a dedicated section under the action buttons.
@@ -172,7 +180,13 @@ For large all-in-one packs (e.g., integrated overhauls), maintaining parity betw
 
 ---
 
+## Current Development Status
+
+The currently documented/implemented state is the **confirmed working preview implementation** that has been validated in-game.
+
+Planned roadmap expansions (presets, advanced class include/exclude controls, additional confirmation flows, and later milestones) are intentionally deferred until after player feedback.
+
 ## Summary
 
 Trash Manager Revamped turns inventory cleanup from a repetitive manual task into a controlled, filter-driven workflow.  
-It preserves player control, supports alliance operations, and adds tech-aware filtering to better match modern modded Avorion playthroughs.
+It preserves player control, supports alliance operations, includes a confirmed working preview path, and adds tech-aware filtering to better match modern modded Avorion playthroughs.
