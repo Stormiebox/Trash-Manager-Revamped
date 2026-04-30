@@ -1,10 +1,9 @@
-
 meta =
 {
     -- ID of your mod; Make sure this is unique!
     -- Will be used for identifying the mod in dependency lists
     -- Will be changed to workshop ID (ensuring uniqueness) when you upload the mod to the workshop
-    id = "TrashManagerRevamped",
+    id = "3715684735",
 
     -- Name of your mod; You may want this to be unique, but it's not absolutely necessary.
     -- This is an additional helper attribute for you to easily identify your mod in the Mods() list
@@ -20,13 +19,13 @@ meta =
     description = "Revamped with new features and mod stability to work in the current Avorion version.",
 
     -- Insert all authors into this list
-    authors = {"Stormbox"},
+    authors = { "Stormbox" },
 
     -- Version of your mod, should be in format 1.0.0 (major.minor.patch) or 1.0 (major.minor)
     -- This will be used to check for unmet dependencies or incompatibilities, and to check compatibility between clients and dedicated servers with mods.
     -- If a client with an unmatching major or minor mod version wants to log into a server, login is prohibited.
     -- Unmatching patch version still allows logging into a server. This works in both ways (server or client higher or lower version).
-    version = "1.0",
+    version = "1.2.0",
 
     -- If your mod requires dependencies, enter them here. The game will check that all dependencies given here are met.
     -- Possible attributes:
@@ -47,7 +46,7 @@ meta =
         { id = "1788913474", exact = "*.*", incompatible = true },
         { id = "2853246039", exact = "*.*", incompatible = true },
         { id = "3315794988", exact = "*.*", incompatible = true },
-        {id = "Avorion", min = "2.0", max = "5.0"}
+        { id = "Avorion",    min = "2.0",   max = "5.0" }
     },
 
     -- Set to true if the mod only has to run on the server. Clients will get notified that the mod is running on the server, but they won't download it to themselves

@@ -137,12 +137,26 @@ local function getItemTechLevel(sItem)
     if not sItem or not sItem.item then return nil end
     local item = sItem.item
 
+    -- Turrets/templates usually expose averageTech directly
     if (item.itemType == InventoryItemType.Turret or item.itemType == InventoryItemType.TurretTemplate) and item.averageTech then
         return round(item.averageTech, 1)
     end
 
-    if item.getValue and item:getValue("tech") then
-        return item:getValue("tech")
+    -- System upgrades don't expose getValue("tech") in all versions/templates.
+    -- Skip tech probing here to avoid server-side property errors.
+    if item.itemType == InventoryItemType.SystemUpgrade then
+        return nil
+    end
+
+    local ok, tech = pcall(function()
+        if item.getValue then
+            return item:getValue("tech")
+        end
+        return nil
+    end)
+
+    if ok and tech then
+        return tech
     end
 
     return nil
@@ -257,16 +271,23 @@ callable(TrashMan, "onUnmarkAllPressedServer1")
 function TrashMan.onMarkTrashPressedServer2(systemRarity, turretRarities, minTech, maxTech)
     if onClient() then return end
 
-    local buyer, ship, player = getInteractingFaction(callingPlayer, AlliancePrivilege.SpendItems)
-    if not buyer then
-        Player(callingPlayer):sendChatMessage("Server", 1, "Missing alliance permissions to modify alliance trash items.")
+    local player = Player(callingPlayer)
+    if not player then return end
+    if not player.alliance then
+        player:sendChatMessage("Server", 1, "You are not in an alliance.")
         return
     end
 
-    local inv = buyer:getInventory()
-    local itemsMarked = markTrashInInventory(inv, buyer, systemRarity, turretRarities, minTech, maxTech)
+    local alliance = Alliance(player.allianceIndex)
+    if not alliance then
+        player:sendChatMessage("Server", 1, "Alliance inventory is not accessible right now.")
+        return
+    end
 
-    Player(callingPlayer):sendChatMessage("Server", 0, itemsMarked .. " items have been marked as trash (alliance).")
+    local inv = alliance:getInventory()
+    local itemsMarked = markTrashInInventory(inv, alliance, systemRarity, turretRarities, minTech, maxTech)
+
+    player:sendChatMessage("Server", 0, itemsMarked .. " items have been marked as trash (alliance).")
 end
 callable(TrashMan, "onMarkTrashPressedServer2")
 
@@ -288,16 +309,21 @@ function TrashMan.onPreviewTrashPressedServer2(systemRarity, turretRarities, min
 
     local player = Player(callingPlayer)
     if not player then return end
-
-    local buyer, ship, _ = getInteractingFaction(callingPlayer, AlliancePrivilege.SpendItems)
-    if not buyer then
-        player:sendChatMessage("Server", 1, "Missing alliance permissions to preview alliance trash items.")
+    if not player.alliance then
+        player:sendChatMessage("Server", 1, "You are not in an alliance.")
         invokeClientFunction(player, "onPreviewResultReceived", 0, true)
         return
     end
 
-    local inv = buyer:getInventory()
-    local itemsMatched = previewTrashInInventory(inv, buyer, systemRarity, turretRarities, minTech, maxTech)
+    local alliance = Alliance(player.allianceIndex)
+    if not alliance then
+        player:sendChatMessage("Server", 1, "Alliance inventory is not accessible right now.")
+        invokeClientFunction(player, "onPreviewResultReceived", 0, true)
+        return
+    end
+
+    local inv = alliance:getInventory()
+    local itemsMatched = previewTrashInInventory(inv, alliance, systemRarity, turretRarities, minTech, maxTech)
 
     invokeClientFunction(player, "onPreviewResultReceived", itemsMatched, true)
 end
@@ -306,11 +332,21 @@ callable(TrashMan, "onPreviewTrashPressedServer2")
 function TrashMan.onUnmarkAllPressedServer2()
     if onClient() then return end
 
-    local buyer, ship, player = getInteractingFaction(callingPlayer, AlliancePrivilege.SpendItems)
-    if not buyer then return end
+    local player = Player(callingPlayer)
+    if not player then return end
+    if not player.alliance then
+        player:sendChatMessage("Server", 1, "You are not in an alliance.")
+        return
+    end
+
+    local alliance = Alliance(player.allianceIndex)
+    if not alliance then
+        player:sendChatMessage("Server", 1, "Alliance inventory is not accessible right now.")
+        return
+    end
 
     local itemsMarked = 0
-    local inv = buyer:getInventory()
+    local inv = alliance:getInventory()
     local totalItems = 0
 
     for index, slotItem in pairs(inv:getItems()) do
@@ -328,7 +364,7 @@ function TrashMan.onUnmarkAllPressedServer2()
         end
     end
 
-    Player(callingPlayer):sendChatMessage("Server", 0, itemsMarked .. " of " .. totalItems .. " items are no longer marked for trash (alliance).")
+    player:sendChatMessage("Server", 0, itemsMarked .. " of " .. totalItems .. " items are no longer marked for trash (alliance).")
 end
 callable(TrashMan, "onUnmarkAllPressedServer2")
 -- allianz-end
