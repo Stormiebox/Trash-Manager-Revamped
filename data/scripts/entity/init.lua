@@ -1,10 +1,11 @@
 if onServer() then
     local entity = Entity()
-    if not entity then return end
+    if not entity then
+        return
+    end
 
-    -- Attach TrashMan only to player-owned ships & stations.
-    -- This avoids broad attachment to unrelated entities and reduces script index mismatch noise.
-    if not entity.aiOwned and (entity.isShip or entity.isStation) and entity.playerOwned then
+    -- Stormbox: Add TrashMan.lua to all ships, stations, and drones you pilot (including Alliance)
+    if not entity.aiOwned and (entity.isShip or entity.isStation or entity.isDrone) and (entity.playerOwned or entity.allianceOwned) then
         entity:addScriptOnce("data/scripts/entity/TrashMan.lua")
     end
 end

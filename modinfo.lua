@@ -16,7 +16,7 @@ meta =
     type = "mod",
 
     -- Description of your mod that will be displayed to players
-    description = "Revamped with new features and mod stability to work in the current Avorion version.",
+    description = "Revamped with new features and mod stability to work in the current Avorion version. This mod is integrated into Cosmic Overhaul!",
 
     -- Insert all authors into this list
     authors = { "Stormbox" },
@@ -25,7 +25,7 @@ meta =
     -- This will be used to check for unmet dependencies or incompatibilities, and to check compatibility between clients and dedicated servers with mods.
     -- If a client with an unmatching major or minor mod version wants to log into a server, login is prohibited.
     -- Unmatching patch version still allows logging into a server. This works in both ways (server or client higher or lower version).
-    version = "1.2.0",
+    version = "2.0.0",
 
     -- If your mod requires dependencies, enter them here. The game will check that all dependencies given here are met.
     -- Possible attributes:

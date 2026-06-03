@@ -1,9 +1,9 @@
 package.path = package.path .. ";data/scripts/lib/?.lua"
 
-include ("stringutility")
-include ("utility")
-include ("callable")
-local SellableInventoryItem = include ("sellableinventoryitem")
+include("stringutility")
+include("utility")
+include("callable")
+local SellableInventoryItem = include("sellableinventoryitem")
 
 -- Don't remove or alter the following comment, it tells the game the namespace this script lives in. If you remove it, the script will break.
 -- namespace TrashMan
@@ -16,15 +16,15 @@ local checkBoxes = {}
 local checkBoxAllianz = {}
 local listBoxes = {}
 local previewLabel
-local grey = ColorRGB(.3,.3,.3)
+local grey = ColorRGB(.3, .3, .3)
 
 local function addLine(matType, px, py, tooltip)
     local material = Material(matType)
-    checkBoxes[matType] = window:createCheckBox(Rect(px, py, px + 20, py + 20), "", "")
-    local label = window:createLabel(vec2(px + 25, py),  material.name, 15)
+    checkBoxes[matType] = window:createCheckBox(Rect(px, py, px+20, py+20), "", "")
+    local label = window:createLabel(vec2(px+25, py), material.name, 15)
     label.color = material.color
 
-    listBoxes[matType] = window:createComboBox(Rect(px + 150, py, px + 300, py + 20), "")
+    listBoxes[matType] = window:createComboBox(Rect(px+150, py, px+300, py+20), "")
     for rType = RarityType.Petty, RarityType.Legendary do
         local rarity = Rarity(rType)
         listBoxes[matType]:addEntry(rarity.name)
@@ -42,11 +42,9 @@ function TrashMan.interactionPossible(playerIndex, option)
     local craft = player.craft
     if craft == nil then return false end
 
-    -- Trash Man is accessible only when player is in the entity
     if craft.index == self.index then
         return true
     end
-
     return false
 end
 
@@ -57,7 +55,7 @@ function TrashMan.initUI()
     local res = getResolution();
     local size = vec2(460, 540)
     local menu = ScriptUI()
-    window = menu:createWindow(Rect(res * 0.5 - size * 0.5, res * 0.5 + size * 0.5));
+    window = menu:createWindow(Rect(res*0.5-size*0.5, res*0.5+size*0.5));
     menu:registerWindow(window, "Trash Man"%_t);
 
     window.caption = "Trash Man"%_t
@@ -76,38 +74,40 @@ function TrashMan.initUI()
     local pyDelta = 30
 
     -- Systems To Trash
-    window:createLabel(vec2(column1, py),  "Systems to trash"%_t, 15)
-    py = py + pyDelta
-    systemsBox = window:createComboBox(Rect(column2, py, column2 + 300, py + lineHeight), "")
+    window:createLabel(vec2(column1, py), "Systems to trash"%_t, 15)
+    py = py+pyDelta
+    systemsBox = window:createComboBox(Rect(column2, py, column2+300, py+lineHeight), "")
     systemsBox:addEntry("None"%_t)
     for rType = RarityType.Petty, RarityType.Legendary do
         local rarity = Rarity(rType)
         systemsBox:addEntry(rarity.name)
     end
-    py = py + pyDelta
+    py = py+pyDelta
 
     -- Turrets to Trash
-    window:createLabel(vec2(column1, py),  "Turrets to trash"%_t, 15)
-    py = py + pyDelta
+    window:createLabel(vec2(column1, py), "Turrets to trash"%_t, 15)
+    py = py+pyDelta
 
     for materialNumber = MaterialType.Iron, MaterialType.Avorion do
         addLine(materialNumber, column2, py)
-        py = py + pyDelta
+        py = py+pyDelta
     end
 
     -- private // alliance
-    checkBoxAllianz[0] = window:createCheckBox(Rect(column2, py, column2 + 20, py + 20), "", "")
-    window:createLabel(vec2(column2 + 25, py), "Alliance", 15)
-    py = py + pyDelta
+    checkBoxAllianz[0] = window:createCheckBox(Rect(column2, py, column2+20, py+20), "", "")
+    window:createLabel(vec2(column2+25, py), "Alliance", 15)
+    py = py+pyDelta
 
     local qFrame = window:createFrame(Rect(380, 10, 400, 30))
     local qLabel = window:createLabel(vec2(380, 10), " ?", 15)
 
-    qLabel.tooltip = "Select which types of inventory items to mark as trash. These items will not be destroyed or immediately sold. Instead, the next time you visit the appropriate merchant they can be sold with the merchant's 'Sell Trash' button.\nItems that are marked as favorites will not get marked for trash!"%_t
+    qLabel.tooltip =
+    "Select which types of inventory items to mark as trash. These items will not be destroyed or immediately sold. Instead, the next time you visit the appropriate merchant they can be sold with the merchant's 'Sell Trash' button.\nItems that are marked as favorites will not get marked for trash!"%
+    _t
 
-    local button1Rect = Rect(column2, py, column2 + 120, py + 32)
-    local button2Rect = Rect(column2 + 130, py, column2 + 250, py + 32)
-    local button3Rect = Rect(column2 + 260, py, column2 + 380, py + 32)
+    local button1Rect = Rect(column2, py, column2+120, py+32)
+    local button2Rect = Rect(column2+130, py, column2+250, py+32)
+    local button3Rect = Rect(column2+260, py, column2+380, py+32)
 
     local button1 = window:createButton(button1Rect, "Mark"%_t, "onMarkTrashPressed")
     local button2 = window:createButton(button2Rect, "Unmark"%_t, "onUnmarkAllPressed")
@@ -115,16 +115,16 @@ function TrashMan.initUI()
     button1.maxTextSize = 15
     button2.maxTextSize = 15
     button3.maxTextSize = 15
-    py = py + pyDelta + 8
+    py = py+pyDelta+8
 
     previewLabel = window:createLabel(vec2(column2, py), "Preview: not run yet"%_t, 15)
     previewLabel.color = ColorRGB(1, 1, 1)
-    py = py + pyDelta + 8
+    py = py+pyDelta+8
 
     window:createLabel(vec2(column1, py), "Tech level filter (optional)"%_t, 15)
-    py = py + pyDelta
-    minTechBox = window:createComboBox(Rect(column2, py, column2 + 170, py + lineHeight), "")
-    maxTechBox = window:createComboBox(Rect(column2 + 180, py, column2 + 350, py + lineHeight), "")
+    py = py+pyDelta
+    minTechBox = window:createComboBox(Rect(column2, py, column2+170, py+lineHeight), "")
+    maxTechBox = window:createComboBox(Rect(column2+180, py, column2+350, py+lineHeight), "")
     minTechBox:addEntry("Min: 1"%_t)
     maxTechBox:addEntry("Max: 52"%_t)
     for i = 1, 52 do
@@ -201,7 +201,7 @@ local function processTrashInInventory(inv, buyer, systemRarity, turretRarities,
             local sItem = SellableInventoryItem(iitem, index, buyer)
             if canTrashByFilters(sItem, systemRarity, turretRarities, minTech, maxTech) then
                 local amount = inv:amount(index)
-                itemsMatched = itemsMatched + amount
+                itemsMatched = itemsMatched+amount
 
                 if applyChanges then
                     iitem.trash = true
@@ -235,6 +235,7 @@ function TrashMan.onMarkTrashPressedServer1(systemRarity, turretRarities, minTec
 
     player:sendChatMessage("Server", 0, itemsMarked .. " items have been marked as trash (private).")
 end
+
 callable(TrashMan, "onMarkTrashPressedServer1")
 
 function TrashMan.onUnmarkAllPressedServer1()
@@ -251,19 +252,21 @@ function TrashMan.onUnmarkAllPressedServer1()
         local iitem = slotItem.item
         if iitem ~= nil then
             local amount = inv:amount(index)
-            totalItems = totalItems + amount
+            totalItems = totalItems+amount
 
             if iitem.trash then
                 iitem.trash = false
                 inv:removeAll(index)
                 inv:addAt(iitem, index, amount)
-                itemsMarked = itemsMarked + amount
+                itemsMarked = itemsMarked+amount
             end
         end
     end
 
-    player:sendChatMessage("Server", 0, itemsMarked .. " of " .. totalItems .. " items are no longer marked for trash (private).")
+    player:sendChatMessage("Server", 0,
+        itemsMarked .. " of " .. totalItems .. " items are no longer marked for trash (private).")
 end
+
 callable(TrashMan, "onUnmarkAllPressedServer1")
 -- private-end
 
@@ -289,6 +292,7 @@ function TrashMan.onMarkTrashPressedServer2(systemRarity, turretRarities, minTec
 
     player:sendChatMessage("Server", 0, itemsMarked .. " items have been marked as trash (alliance).")
 end
+
 callable(TrashMan, "onMarkTrashPressedServer2")
 
 function TrashMan.onPreviewTrashPressedServer1(systemRarity, turretRarities, minTech, maxTech)
@@ -302,6 +306,7 @@ function TrashMan.onPreviewTrashPressedServer1(systemRarity, turretRarities, min
 
     invokeClientFunction(player, "onPreviewResultReceived", itemsMatched, false)
 end
+
 callable(TrashMan, "onPreviewTrashPressedServer1")
 
 function TrashMan.onPreviewTrashPressedServer2(systemRarity, turretRarities, minTech, maxTech)
@@ -327,6 +332,7 @@ function TrashMan.onPreviewTrashPressedServer2(systemRarity, turretRarities, min
 
     invokeClientFunction(player, "onPreviewResultReceived", itemsMatched, true)
 end
+
 callable(TrashMan, "onPreviewTrashPressedServer2")
 
 function TrashMan.onUnmarkAllPressedServer2()
@@ -353,19 +359,21 @@ function TrashMan.onUnmarkAllPressedServer2()
         local iitem = slotItem.item
         if iitem ~= nil then
             local amount = inv:amount(index)
-            totalItems = totalItems + amount
+            totalItems = totalItems+amount
 
             if iitem.trash then
                 iitem.trash = false
                 inv:removeAll(index)
                 inv:addAt(iitem, index, amount)
-                itemsMarked = itemsMarked + amount
+                itemsMarked = itemsMarked+amount
             end
         end
     end
 
-    player:sendChatMessage("Server", 0, itemsMarked .. " of " .. totalItems .. " items are no longer marked for trash (alliance).")
+    player:sendChatMessage("Server", 0,
+        itemsMarked .. " of " .. totalItems .. " items are no longer marked for trash (alliance).")
 end
+
 callable(TrashMan, "onUnmarkAllPressedServer2")
 -- allianz-end
 
@@ -374,7 +382,7 @@ local function buildFilterRequest()
 
     for mat = MaterialType.Iron, MaterialType.Avorion do
         if checkBoxes[mat].checked then
-            turretRarities[mat] = listBoxes[mat].selectedIndex - 1
+            turretRarities[mat] = listBoxes[mat].selectedIndex-1
         end
     end
 
@@ -387,7 +395,7 @@ local function buildFilterRequest()
         maxTech = maxTechBox.selectedIndex
     end
 
-    return (systemsBox.selectedIndex - 2), turretRarities, minTech, maxTech
+    return (systemsBox.selectedIndex-2), turretRarities, minTech, maxTech
 end
 
 function TrashMan.onPreviewResultReceived(itemsMatched, allianceMode)
