@@ -1,26 +1,81 @@
-# ========== mods\Trash Manager\data\scripts\entity\TrashMan.lua ==========
-#: mods\Trash Manager\data\scripts\entity\TrashMan.lua:
+# ========== mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua ==========
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
 msgid "Trash Man"
 msgstr ""
 
-#: mods\Trash Manager\data\scripts\entity\TrashMan.lua:
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+msgid "Inventory: loading..."
+msgstr ""
+
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+msgid "Item Types to Mark"
+msgstr ""
+
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+msgid "Turrets"
+msgstr ""
+
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+msgid "Systems"
+msgstr ""
+
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+msgid "Templates"
+msgstr ""
+
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
 msgid "Systems to trash"
 msgstr ""
 
-#: mods\Trash Manager\data\scripts\entity\TrashMan.lua:
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+msgid "None"
+msgstr ""
+
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
 msgid "Turrets to trash"
 msgstr ""
 
-#: mods\Trash Manager\data\scripts\entity\TrashMan.lua:
-msgid "Select which types of inventory items to mark as trash. These items will not be destroyed or immediately sold. Instead, the next time you visit the appropriate merchant they can be sold with the merchant's 'Sell Trash' button.\nItems that are marked as favorites will not get marked for trash!"
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+msgid "Alliance Inventory"
 msgstr ""
 
-#: mods\Trash Manager\data\scripts\entity\TrashMan.lua:
-msgid "Mark Selected"
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+msgid "Select which types of inventory items to mark as trash. These items will not be destroyed or immediately sold. Instead, the next time you visit the appropriate merchant they can be sold with the merchant's Sell Trash button.\nItems marked as favorites will not be trashed!\n\nTemplates: Turret blueprints stored in inventory.\nUnmark Filter: Unmarks only items that match your active filters."
 msgstr ""
 
-#: mods\Trash Manager\data\scripts\entity\TrashMan.lua:
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+msgid "Mark"
+msgstr ""
+
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
 msgid "Unmark All"
 msgstr ""
 
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+msgid "Unmark Filter"
+msgstr ""
+
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+msgid "Preview"
+msgstr ""
+
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+msgid "Preview: not run yet"
+msgstr ""
+
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+msgid "Tech Level Filter (optional)"
+msgstr ""
+
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+msgid "Min: 1"
+msgstr ""
+
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+msgid "Max: 52"
+msgstr ""
+
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+msgid "Filter Presets"
+msgstr ""
 

@@ -1,26 +1,97 @@
-# ========== mods\Trash Manager\data\scripts\entity\TrashMan.lua ==========
-#: mods\Trash Manager\data\scripts\entity\TrashMan.lua:
+# ========== mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua ==========
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
 msgid "Trash Man"
 msgstr "Мусорщик"
 
-#: mods\Trash Manager\data\scripts\entity\TrashMan.lua:
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+# TODO: Translate for v2.0.0
+msgid "Inventory: loading..."
+msgstr ""
+
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+# TODO: Translate for v2.0.0
+msgid "Item Types to Mark"
+msgstr ""
+
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+# TODO: Translate for v2.0.0
+msgid "Turrets"
+msgstr ""
+
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+# TODO: Translate for v2.0.0
+msgid "Systems"
+msgstr ""
+
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+# TODO: Translate for v2.0.0
+msgid "Templates"
+msgstr ""
+
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
 msgid "Systems to trash"
 msgstr "Ненужные системы"
 
-#: mods\Trash Manager\data\scripts\entity\TrashMan.lua:
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+# TODO: Translate for v2.0.0
+msgid "None"
+msgstr ""
+
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
 msgid "Turrets to trash"
 msgstr "Ненужные турели"
 
-#: mods\Trash Manager\data\scripts\entity\TrashMan.lua:
-msgid "Select which types of inventory items to mark as trash. These items will not be destroyed or immediately sold. Instead, the next time you visit the appropriate merchant they can be sold with the merchant's 'Sell Trash' button.\nItems that are marked as favorites will not get marked for trash!"
-msgstr "Выберите, какие типы предметов пометить как мусор. Эти предметы не будут сразу же уничтожены или проданы. Вместо этого, когда вы в следующий раз посетите подходящего торговца, они могут быть проданы при нажатии на кнопку 'Продать мусор'.\nПредметы в избранном не будут помечены как мусор!"
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+# TODO: Translate for v2.0.0 (was: "Alliance")
+msgid "Alliance Inventory"
+msgstr ""
 
-#: mods\Trash Manager\data\scripts\entity\TrashMan.lua:
-msgid "Mark Selected"
-msgstr "Отметить выбр."
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+# TODO: Translate for v2.0.0 (tooltip text updated)
+msgid "Select which types of inventory items to mark as trash. These items will not be destroyed or immediately sold. Instead, the next time you visit the appropriate merchant they can be sold with the merchant's Sell Trash button.\nItems marked as favorites will not be trashed!\n\nTemplates: Turret blueprints stored in inventory.\nUnmark Filter: Unmarks only items that match your active filters."
+msgstr "Выберите, какие типы предметов пометить как мусор. Эти предметы не будут сразу же уничтожены или проданы. Вместо этого, когда вы в следующий раз посетите подходящего торговца, они могут быть проданы при нажатии на кнопку Продать мусор.\nПредметы в избранном не будут помечены как мусор!\n\nШаблоны: Чертежи турелей в инвентаре.\nСнять фильтр: Снимает пометки только с предметов, совпадающих с текущим фильтром."
 
-#: mods\Trash Manager\data\scripts\entity\TrashMan.lua:
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+# TODO: Translate for v2.0.0 (was: "Mark Selected" -> now "Mark")
+msgid "Mark"
+msgstr "Отметить"
+
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
 msgid "Unmark All"
 msgstr "Снять отметки"
 
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+# TODO: Translate for v2.0.0
+msgid "Unmark Filter"
+msgstr ""
+
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+# TODO: Translate for v2.0.0
+msgid "Preview"
+msgstr ""
+
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+# TODO: Translate for v2.0.0
+msgid "Preview: not run yet"
+msgstr ""
+
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+# TODO: Translate for v2.0.0
+msgid "Tech Level Filter (optional)"
+msgstr ""
+
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+# TODO: Translate for v2.0.0
+msgid "Min: 1"
+msgstr ""
+
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+# TODO: Translate for v2.0.0
+msgid "Max: 52"
+msgstr ""
+
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+# TODO: Translate for v2.0.0
+msgid "Filter Presets"
+msgstr ""
 

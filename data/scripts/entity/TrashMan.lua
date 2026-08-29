@@ -9,25 +9,31 @@ local SellableInventoryItem = include("sellableinventoryitem")
 -- namespace TrashMan
 TrashMan = {}
 
+-- Client-side UI element handles
 local systemsBox
 local minTechBox
 local maxTechBox
-local checkBoxes = {}
+local checkBoxes    = {}
 local checkBoxAllianz = {}
-local listBoxes = {}
+local listBoxes     = {}
+local checkBoxTurrets
+local checkBoxSystems
+local checkBoxTemplates
 local previewLabel
-local grey = ColorRGB(.3, .3, .3)
+local statsLabel
+local presetLabels  = {}
 
-local function addLine(matType, px, py, tooltip)
+local NUM_PRESETS       = 3
+local PRESET_KEY_PREFIX = "TMR_Preset_"
+
+local function addMaterialRow(matType, px, py)
     local material = Material(matType)
-    checkBoxes[matType] = window:createCheckBox(Rect(px, py, px+20, py+20), "", "")
-    local label = window:createLabel(vec2(px+25, py), material.name, 15)
-    label.color = material.color
-
-    listBoxes[matType] = window:createComboBox(Rect(px+150, py, px+300, py+20), "")
+    checkBoxes[matType] = window:createCheckBox(Rect(px, py, px + 20, py + 20), "", "")
+    local lbl = window:createLabel(vec2(px + 25, py), material.name, 15)
+    lbl.color = material.color
+    listBoxes[matType] = window:createComboBox(Rect(px + 150, py, px + 330, py + 20), "")
     for rType = RarityType.Petty, RarityType.Legendary do
-        local rarity = Rarity(rType)
-        listBoxes[matType]:addEntry(rarity.name)
+        listBoxes[matType]:addEntry(Rarity(rType).name)
     end
 end
 
@@ -36,172 +42,188 @@ function TrashMan.getIcon()
 end
 
 function TrashMan.interactionPossible(playerIndex, option)
-    local self = Entity()
     local player = Player(playerIndex)
-
-    local craft = player.craft
+    local craft  = player.craft
     if craft == nil then return false end
-
-    if craft.index == self.index then
-        return true
-    end
-    return false
+    return craft.index == Entity().index
 end
 
--- this function gets called on creation of the entity the script is attached to, on client only
--- AFTER initialize above
--- create all required UI elements for the client side
 function TrashMan.initUI()
-    local res = getResolution();
-    local size = vec2(460, 540)
+    local res  = getResolution()
+    local size = vec2(510, 775)
     local menu = ScriptUI()
-    window = menu:createWindow(Rect(res*0.5-size*0.5, res*0.5+size*0.5));
-    menu:registerWindow(window, "Trash Man"%_t);
+    window = menu:createWindow(Rect(res * 0.5 - size * 0.5, res * 0.5 + size * 0.5))
+    menu:registerWindow(window, "Trash Man"%_t)
 
-    window.caption = "Trash Man"%_t
+    window.caption         = "Trash Man"%_t
     window.showCloseButton = 1
-    window.moveable = 1
-    window.clickThrough = 0
+    window.moveable        = 1
+    window.clickThrough    = 0
 
-    local hsplit = UIHorizontalSplitter(Rect(vec2(), size), 10, 10, 0.5)
-    hsplit.bottomSize = 30
-    local vsplit = UIVerticalSplitter(hsplit.bottom, 10, 0, 0.5)
-
-    local column1 = 10
-    local column2 = 30
+    local c1 = 10
+    local c2 = 30
     local py = 10
-    local lineHeight = 20
-    local pyDelta = 30
+    local lh = 20
+    local dy = 30
 
-    -- Systems To Trash
-    window:createLabel(vec2(column1, py), "Systems to trash"%_t, 15)
-    py = py+pyDelta
-    systemsBox = window:createComboBox(Rect(column2, py, column2+300, py+lineHeight), "")
+    -- Inventory stats bar
+    statsLabel = window:createLabel(vec2(c1, py), "Inventory: loading..."%_t, 14)
+    statsLabel.color = ColorRGB(0.55, 0.85, 1.0)
+    py = py + dy
+
+    window:createFrame(Rect(c1, py, 492, py + 2))
+    py = py + 10
+
+    -- Item type toggles
+    window:createLabel(vec2(c1, py), "Item Types to Mark"%_t, 15)
+    py = py + dy
+
+    checkBoxTurrets = window:createCheckBox(Rect(c2, py, c2 + 20, py + 20), "", "")
+    checkBoxTurrets.checked = true
+    window:createLabel(vec2(c2 + 25, py), "Turrets"%_t, 14)
+
+    checkBoxSystems = window:createCheckBox(Rect(c2 + 135, py, c2 + 155, py + 20), "", "")
+    checkBoxSystems.checked = true
+    window:createLabel(vec2(c2 + 160, py), "Systems"%_t, 14)
+
+    checkBoxTemplates = window:createCheckBox(Rect(c2 + 270, py, c2 + 290, py + 20), "", "")
+    checkBoxTemplates.checked = true
+    window:createLabel(vec2(c2 + 295, py), "Templates"%_t, 14)
+    py = py + dy
+
+    window:createFrame(Rect(c1, py, 492, py + 2))
+    py = py + 10
+
+    -- System upgrade rarity
+    window:createLabel(vec2(c1, py), "Systems to trash"%_t, 15)
+    py = py + dy
+    systemsBox = window:createComboBox(Rect(c2, py, c2 + 300, py + lh), "")
     systemsBox:addEntry("None"%_t)
     for rType = RarityType.Petty, RarityType.Legendary do
-        local rarity = Rarity(rType)
-        systemsBox:addEntry(rarity.name)
+        systemsBox:addEntry(Rarity(rType).name)
     end
-    py = py+pyDelta
+    py = py + dy
 
-    -- Turrets to Trash
-    window:createLabel(vec2(column1, py), "Turrets to trash"%_t, 15)
-    py = py+pyDelta
-
-    for materialNumber = MaterialType.Iron, MaterialType.Avorion do
-        addLine(materialNumber, column2, py)
-        py = py+pyDelta
+    -- Per-material turret rarity
+    window:createLabel(vec2(c1, py), "Turrets to trash"%_t, 15)
+    py = py + dy
+    for mat = MaterialType.Iron, MaterialType.Avorion do
+        addMaterialRow(mat, c2, py)
+        py = py + dy
     end
 
-    -- private // alliance
-    checkBoxAllianz[0] = window:createCheckBox(Rect(column2, py, column2+20, py+20), "", "")
-    window:createLabel(vec2(column2+25, py), "Alliance", 15)
-    py = py+pyDelta
+    -- Alliance toggle
+    checkBoxAllianz[0] = window:createCheckBox(Rect(c2, py, c2 + 20, py + 20), "", "")
+    window:createLabel(vec2(c2 + 25, py), "Alliance Inventory"%_t, 15)
 
-    local qFrame = window:createFrame(Rect(380, 10, 400, 30))
-    local qLabel = window:createLabel(vec2(380, 10), " ?", 15)
+    local qLabel = window:createLabel(vec2(435, py), " ?", 15)
+    qLabel.tooltip = "Select which types of inventory items to mark as trash. These items will not be destroyed or immediately sold. Instead, the next time you visit the appropriate merchant they can be sold with the merchant's Sell Trash button.\nItems marked as favorites will not be trashed!\n\nTemplates: Turret blueprints stored in inventory.\nUnmark Filter: Unmarks only items that match your active filters."%_t
+    py = py + dy
 
-    qLabel.tooltip =
-    "Select which types of inventory items to mark as trash. These items will not be destroyed or immediately sold. Instead, the next time you visit the appropriate merchant they can be sold with the merchant's 'Sell Trash' button.\nItems that are marked as favorites will not get marked for trash!"%
-    _t
+    -- Action buttons
+    local bw = 106
+    local bg = 6
+    window:createButton(Rect(c2,           py, c2+bw,        py+32), "Mark"%_t,          "onMarkTrashPressed").maxTextSize      = 13
+    window:createButton(Rect(c2+bw+bg,     py, c2+bw*2+bg,   py+32), "Unmark All"%_t,    "onUnmarkAllPressed").maxTextSize      = 13
+    window:createButton(Rect(c2+bw*2+bg*2, py, c2+bw*3+bg*2, py+32), "Unmark Filter"%_t, "onUnmarkFilteredPressed").maxTextSize = 13
+    window:createButton(Rect(c2+bw*3+bg*3, py, c2+bw*4+bg*3, py+32), "Preview"%_t,       "onPreviewTrashPressed").maxTextSize   = 13
+    py = py + dy + 10
 
-    local button1Rect = Rect(column2, py, column2+120, py+32)
-    local button2Rect = Rect(column2+130, py, column2+250, py+32)
-    local button3Rect = Rect(column2+260, py, column2+380, py+32)
+    -- Preview result label
+    previewLabel = window:createLabel(vec2(c2, py), "Preview: not run yet"%_t, 14)
+    previewLabel.color = ColorRGB(1.0, 1.0, 1.0)
+    py = py + dy
 
-    local button1 = window:createButton(button1Rect, "Mark"%_t, "onMarkTrashPressed")
-    local button2 = window:createButton(button2Rect, "Unmark"%_t, "onUnmarkAllPressed")
-    local button3 = window:createButton(button3Rect, "Preview"%_t, "onPreviewTrashPressed")
-    button1.maxTextSize = 15
-    button2.maxTextSize = 15
-    button3.maxTextSize = 15
-    py = py+pyDelta+8
+    window:createFrame(Rect(c1, py, 492, py + 2))
+    py = py + 10
 
-    previewLabel = window:createLabel(vec2(column2, py), "Preview: not run yet"%_t, 15)
-    previewLabel.color = ColorRGB(1, 1, 1)
-    py = py+pyDelta+8
-
-    window:createLabel(vec2(column1, py), "Tech level filter (optional)"%_t, 15)
-    py = py+pyDelta
-    minTechBox = window:createComboBox(Rect(column2, py, column2+170, py+lineHeight), "")
-    maxTechBox = window:createComboBox(Rect(column2+180, py, column2+350, py+lineHeight), "")
+    -- Tech level filter
+    window:createLabel(vec2(c1, py), "Tech Level Filter (optional)"%_t, 15)
+    py = py + dy
+    minTechBox = window:createComboBox(Rect(c2,       py, c2 + 170, py + lh), "")
+    maxTechBox = window:createComboBox(Rect(c2 + 180, py, c2 + 350, py + lh), "")
     minTechBox:addEntry("Min: 1"%_t)
     maxTechBox:addEntry("Max: 52"%_t)
     for i = 1, 52 do
         minTechBox:addEntry("Min: " .. i)
         maxTechBox:addEntry("Max: " .. i)
     end
+    py = py + dy
+
+    window:createFrame(Rect(c1, py, 492, py + 2))
+    py = py + 10
+
+    -- Filter presets
+    window:createLabel(vec2(c1, py), "Filter Presets"%_t, 15)
+    py = py + dy
+    for i = 1, NUM_PRESETS do
+        window:createButton(Rect(c2,      py, c2+90,  py+28), "Save #"..i, "onSavePreset"..i).maxTextSize = 13
+        window:createButton(Rect(c2+98,   py, c2+188, py+28), "Load #"..i, "onLoadPreset"..i).maxTextSize = 13
+        presetLabels[i] = window:createLabel(vec2(c2+200, py+6), "- empty -", 13)
+        presetLabels[i].color = ColorRGB(0.45, 0.45, 0.45)
+        py = py + dy + 5
+    end
+
+    invokeServerFunction("onRequestInitialData")
 end
 
-local function getItemTechLevel(sItem)
-    if not sItem or not sItem.item then return nil end
-    local item = sItem.item
-
-    -- Turrets/templates usually expose averageTech directly
-    if (item.itemType == InventoryItemType.Turret or item.itemType == InventoryItemType.TurretTemplate) and item.averageTech then
-        return round(item.averageTech, 1)
-    end
-
-    -- System upgrades don't expose getValue("tech") in all versions/templates.
-    -- Skip tech probing here to avoid server-side property errors.
-    if item.itemType == InventoryItemType.SystemUpgrade then
-        return nil
-    end
-
-    local ok, tech = pcall(function()
-        if item.getValue then
-            return item:getValue("tech")
-        end
-        return nil
-    end)
-
-    if ok and tech then
-        return tech
-    end
-
-    return nil
-end
-
-local function canTrashByFilters(sItem, systemRarity, turretRarities, minTech, maxTech)
+local function canTrashByFilters(sItem, systemRarity, turretRarities, minTech, maxTech, types)
     if not sItem or not sItem.item then return false end
     local item = sItem.item
 
-    if item.itemType == InventoryItemType.VanillaItem then
-        return false
-    end
+    if item.itemType == InventoryItemType.VanillaItem then return false end
 
-    local rarity = sItem.rarity and sItem.rarity.value or nil
+    local rarity = sItem.rarity and sItem.rarity.value
     if rarity == nil then return false end
 
-    local tech = getItemTechLevel(sItem)
+    local tech = sItem.tech
     if minTech and tech and tech < minTech then return false end
     if maxTech and tech and tech > maxTech then return false end
 
     if item.itemType == InventoryItemType.SystemUpgrade then
+        if types and not types.systems then return false end
         return rarity <= (systemRarity or -1)
     end
 
+    if item.itemType == InventoryItemType.TurretTemplate then
+        if types and not types.templates then return false end
+        if sItem.material ~= nil then
+            local maxRarity = turretRarities and turretRarities[sItem.material.value]
+            if maxRarity == nil then return false end
+            return rarity <= maxRarity
+        end
+        return false
+    end
+
     if sItem.material ~= nil then
-        local material = sItem.material.value
-        local selectedMaxRarity = turretRarities and turretRarities[material]
-        if selectedMaxRarity == nil then return false end
-        return rarity <= selectedMaxRarity
+        if types and not types.turrets then return false end
+        local maxRarity = turretRarities and turretRarities[sItem.material.value]
+        if maxRarity == nil then return false end
+        return rarity <= maxRarity
     end
 
     return false
 end
 
-local function processTrashInInventory(inv, buyer, systemRarity, turretRarities, minTech, maxTech, applyChanges)
-    local itemsMatched = 0
-    if not inv then return itemsMatched end
+local function processTrashInInventory(inv, buyer, systemRarity, turretRarities, minTech, maxTech, types, applyChanges)
+    local counts = { turrets = 0, systems = 0, templates = 0, total = 0 }
+    if not inv then return counts end
 
     for index, slotItem in pairs(inv:getItems()) do
         local iitem = slotItem.item
-        if (iitem ~= nil) and (not iitem.trash) and (not iitem.favorite) then
+        if iitem and not iitem.trash and not iitem.favorite then
             local sItem = SellableInventoryItem(iitem, index, buyer)
-            if canTrashByFilters(sItem, systemRarity, turretRarities, minTech, maxTech) then
+            if canTrashByFilters(sItem, systemRarity, turretRarities, minTech, maxTech, types) then
                 local amount = inv:amount(index)
-                itemsMatched = itemsMatched+amount
+                counts.total = counts.total + amount
+
+                if iitem.itemType == InventoryItemType.SystemUpgrade then
+                    counts.systems = counts.systems + amount
+                elseif iitem.itemType == InventoryItemType.TurretTemplate then
+                    counts.templates = counts.templates + amount
+                else
+                    counts.turrets = counts.turrets + amount
+                end
 
                 if applyChanges then
                     iitem.trash = true
@@ -212,177 +234,319 @@ local function processTrashInInventory(inv, buyer, systemRarity, turretRarities,
         end
     end
 
-    return itemsMatched
+    return counts
 end
 
-local function markTrashInInventory(inv, buyer, systemRarity, turretRarities, minTech, maxTech)
-    return processTrashInInventory(inv, buyer, systemRarity, turretRarities, minTech, maxTech, true)
+local function processUnmarkFilteredInInventory(inv, buyer, systemRarity, turretRarities, minTech, maxTech, types)
+    local count = 0
+    if not inv then return count end
+
+    for index, slotItem in pairs(inv:getItems()) do
+        local iitem = slotItem.item
+        if iitem and iitem.trash then
+            local sItem = SellableInventoryItem(iitem, index, buyer)
+            if canTrashByFilters(sItem, systemRarity, turretRarities, minTech, maxTech, types) then
+                local amount = inv:amount(index)
+                iitem.trash = false
+                inv:removeAll(index)
+                inv:addAt(iitem, index, amount)
+                count = count + amount
+            end
+        end
+    end
+
+    return count
 end
 
-local function previewTrashInInventory(inv, buyer, systemRarity, turretRarities, minTech, maxTech)
-    return processTrashInInventory(inv, buyer, systemRarity, turretRarities, minTech, maxTech, false)
+local function getInventoryStats(inv)
+    local total, trash, favorites = 0, 0, 0
+    if not inv then return total, trash, favorites end
+
+    for index, slotItem in pairs(inv:getItems()) do
+        local iitem = slotItem.item
+        if iitem then
+            local amount = inv:amount(index)
+            total     = total     + amount
+            if iitem.trash    then trash     = trash     + amount end
+            if iitem.favorite then favorites = favorites + amount end
+        end
+    end
+
+    return total, trash, favorites
+end
+
+local function presetKey(slot)
+    return PRESET_KEY_PREFIX .. tostring(slot)
+end
+
+local function savePlayerPreset(player, slot, data)
+    local ok = pcall(function() player:setValue(presetKey(slot), data) end)
+    return ok
+end
+
+local function loadPlayerPreset(player, slot)
+    local ok, val = pcall(function() return player:getValue(presetKey(slot)) end)
+    if ok then return val end
+    return nil
 end
 
 -- private-start
-function TrashMan.onMarkTrashPressedServer1(systemRarity, turretRarities, minTech, maxTech)
+function TrashMan.onMarkTrashPressedServer1(systemRarity, turretRarities, minTech, maxTech, types)
     if onClient() then return end
-
     local player = Player(callingPlayer)
     if not player then return end
 
-    local inv = player:getInventory()
-    local itemsMarked = markTrashInInventory(inv, player, systemRarity, turretRarities, minTech, maxTech)
+    local inv    = player:getInventory()
+    local counts = processTrashInInventory(inv, player, systemRarity, turretRarities, minTech, maxTech, types, true)
 
-    player:sendChatMessage("Server", 0, itemsMarked .. " items have been marked as trash (private).")
+    player:sendChatMessage("Server", 0, string.format(
+        "[Trash Manager] %d items marked as trash (private): %d turret(s), %d system(s), %d template(s).",
+        counts.total, counts.turrets, counts.systems, counts.templates))
+
+    local total, trash, favorites = getInventoryStats(inv)
+    invokeClientFunction(player, "onInventoryStatsReceived", total, trash, favorites)
 end
 
 callable(TrashMan, "onMarkTrashPressedServer1")
 
 function TrashMan.onUnmarkAllPressedServer1()
     if onClient() then return end
-
     local player = Player(callingPlayer)
     if not player then return end
 
-    local itemsMarked = 0
-    local inv = player:getInventory()
-    local totalItems = 0
+    local inv      = player:getInventory()
+    local cleared  = 0
+    local total_i  = 0
 
     for index, slotItem in pairs(inv:getItems()) do
         local iitem = slotItem.item
-        if iitem ~= nil then
+        if iitem then
             local amount = inv:amount(index)
-            totalItems = totalItems+amount
-
+            total_i = total_i + amount
             if iitem.trash then
                 iitem.trash = false
                 inv:removeAll(index)
                 inv:addAt(iitem, index, amount)
-                itemsMarked = itemsMarked+amount
+                cleared = cleared + amount
             end
         end
     end
 
-    player:sendChatMessage("Server", 0,
-        itemsMarked .. " of " .. totalItems .. " items are no longer marked for trash (private).")
+    player:sendChatMessage("Server", 0, string.format(
+        "[Trash Manager] %d of %d items untrashed (private).", cleared, total_i))
+
+    local total, trash, favorites = getInventoryStats(inv)
+    invokeClientFunction(player, "onInventoryStatsReceived", total, trash, favorites)
 end
 
 callable(TrashMan, "onUnmarkAllPressedServer1")
+
+function TrashMan.onUnmarkFilteredPressedServer1(systemRarity, turretRarities, minTech, maxTech, types)
+    if onClient() then return end
+    local player = Player(callingPlayer)
+    if not player then return end
+
+    local inv   = player:getInventory()
+    local count = processUnmarkFilteredInInventory(inv, player, systemRarity, turretRarities, minTech, maxTech, types)
+
+    player:sendChatMessage("Server", 0, string.format(
+        "[Trash Manager] %d item(s) untrashed by active filter (private).", count))
+
+    local total, trash, favorites = getInventoryStats(inv)
+    invokeClientFunction(player, "onInventoryStatsReceived", total, trash, favorites)
+end
+
+callable(TrashMan, "onUnmarkFilteredPressedServer1")
+
+function TrashMan.onPreviewTrashPressedServer1(systemRarity, turretRarities, minTech, maxTech, types)
+    if onClient() then return end
+    local player = Player(callingPlayer)
+    if not player then return end
+
+    local inv    = player:getInventory()
+    local counts = processTrashInInventory(inv, player, systemRarity, turretRarities, minTech, maxTech, types, false)
+
+    local total, trash, favorites = getInventoryStats(inv)
+    invokeClientFunction(player, "onInventoryStatsReceived", total, trash, favorites)
+    invokeClientFunction(player, "onPreviewResultReceived",
+        counts.total, counts.systems, counts.turrets, counts.templates, false)
+end
+
+callable(TrashMan, "onPreviewTrashPressedServer1")
 -- private-end
 
 -- allianz-start
-function TrashMan.onMarkTrashPressedServer2(systemRarity, turretRarities, minTech, maxTech)
-    if onClient() then return end
-
-    local player = Player(callingPlayer)
-    if not player then return end
+local function resolveAlliance(player)
     if not player.alliance then
-        player:sendChatMessage("Server", 1, "You are not in an alliance.")
-        return
+        player:sendChatMessage("Server", 1, "[Trash Manager] You are not in an alliance.")
+        return nil
     end
-
     local alliance = Alliance(player.allianceIndex)
     if not alliance then
-        player:sendChatMessage("Server", 1, "Alliance inventory is not accessible right now.")
-        return
+        player:sendChatMessage("Server", 1, "[Trash Manager] Alliance inventory is not accessible right now.")
+        return nil
     end
+    return alliance
+end
 
-    local inv = alliance:getInventory()
-    local itemsMarked = markTrashInInventory(inv, alliance, systemRarity, turretRarities, minTech, maxTech)
+function TrashMan.onMarkTrashPressedServer2(systemRarity, turretRarities, minTech, maxTech, types)
+    if onClient() then return end
+    local player   = Player(callingPlayer)
+    if not player  then return end
+    local alliance = resolveAlliance(player)
+    if not alliance then return end
 
-    player:sendChatMessage("Server", 0, itemsMarked .. " items have been marked as trash (alliance).")
+    local inv    = alliance:getInventory()
+    local counts = processTrashInInventory(inv, alliance, systemRarity, turretRarities, minTech, maxTech, types, true)
+
+    player:sendChatMessage("Server", 0, string.format(
+        "[Trash Manager] %d items marked as trash (alliance): %d turret(s), %d system(s), %d template(s).",
+        counts.total, counts.turrets, counts.systems, counts.templates))
+
+    local total, trash, favorites = getInventoryStats(inv)
+    invokeClientFunction(player, "onInventoryStatsReceived", total, trash, favorites)
 end
 
 callable(TrashMan, "onMarkTrashPressedServer2")
 
-function TrashMan.onPreviewTrashPressedServer1(systemRarity, turretRarities, minTech, maxTech)
-    if onClient() then return end
-
-    local player = Player(callingPlayer)
-    if not player then return end
-
-    local inv = player:getInventory()
-    local itemsMatched = previewTrashInInventory(inv, player, systemRarity, turretRarities, minTech, maxTech)
-
-    invokeClientFunction(player, "onPreviewResultReceived", itemsMatched, false)
-end
-
-callable(TrashMan, "onPreviewTrashPressedServer1")
-
-function TrashMan.onPreviewTrashPressedServer2(systemRarity, turretRarities, minTech, maxTech)
-    if onClient() then return end
-
-    local player = Player(callingPlayer)
-    if not player then return end
-    if not player.alliance then
-        player:sendChatMessage("Server", 1, "You are not in an alliance.")
-        invokeClientFunction(player, "onPreviewResultReceived", 0, true)
-        return
-    end
-
-    local alliance = Alliance(player.allianceIndex)
-    if not alliance then
-        player:sendChatMessage("Server", 1, "Alliance inventory is not accessible right now.")
-        invokeClientFunction(player, "onPreviewResultReceived", 0, true)
-        return
-    end
-
-    local inv = alliance:getInventory()
-    local itemsMatched = previewTrashInInventory(inv, alliance, systemRarity, turretRarities, minTech, maxTech)
-
-    invokeClientFunction(player, "onPreviewResultReceived", itemsMatched, true)
-end
-
-callable(TrashMan, "onPreviewTrashPressedServer2")
-
 function TrashMan.onUnmarkAllPressedServer2()
     if onClient() then return end
+    local player   = Player(callingPlayer)
+    if not player  then return end
+    local alliance = resolveAlliance(player)
+    if not alliance then return end
 
-    local player = Player(callingPlayer)
-    if not player then return end
-    if not player.alliance then
-        player:sendChatMessage("Server", 1, "You are not in an alliance.")
-        return
-    end
-
-    local alliance = Alliance(player.allianceIndex)
-    if not alliance then
-        player:sendChatMessage("Server", 1, "Alliance inventory is not accessible right now.")
-        return
-    end
-
-    local itemsMarked = 0
-    local inv = alliance:getInventory()
-    local totalItems = 0
+    local inv      = alliance:getInventory()
+    local cleared  = 0
+    local total_i  = 0
 
     for index, slotItem in pairs(inv:getItems()) do
         local iitem = slotItem.item
-        if iitem ~= nil then
+        if iitem then
             local amount = inv:amount(index)
-            totalItems = totalItems+amount
-
+            total_i = total_i + amount
             if iitem.trash then
                 iitem.trash = false
                 inv:removeAll(index)
                 inv:addAt(iitem, index, amount)
-                itemsMarked = itemsMarked+amount
+                cleared = cleared + amount
             end
         end
     end
 
-    player:sendChatMessage("Server", 0,
-        itemsMarked .. " of " .. totalItems .. " items are no longer marked for trash (alliance).")
+    player:sendChatMessage("Server", 0, string.format(
+        "[Trash Manager] %d of %d items untrashed (alliance).", cleared, total_i))
+
+    local total, trash, favorites = getInventoryStats(inv)
+    invokeClientFunction(player, "onInventoryStatsReceived", total, trash, favorites)
 end
 
 callable(TrashMan, "onUnmarkAllPressedServer2")
+
+function TrashMan.onUnmarkFilteredPressedServer2(systemRarity, turretRarities, minTech, maxTech, types)
+    if onClient() then return end
+    local player   = Player(callingPlayer)
+    if not player  then return end
+    local alliance = resolveAlliance(player)
+    if not alliance then return end
+
+    local inv   = alliance:getInventory()
+    local count = processUnmarkFilteredInInventory(inv, alliance, systemRarity, turretRarities, minTech, maxTech, types)
+
+    player:sendChatMessage("Server", 0, string.format(
+        "[Trash Manager] %d item(s) untrashed by active filter (alliance).", count))
+
+    local total, trash, favorites = getInventoryStats(inv)
+    invokeClientFunction(player, "onInventoryStatsReceived", total, trash, favorites)
+end
+
+callable(TrashMan, "onUnmarkFilteredPressedServer2")
+
+function TrashMan.onPreviewTrashPressedServer2(systemRarity, turretRarities, minTech, maxTech, types)
+    if onClient() then return end
+    local player   = Player(callingPlayer)
+    if not player  then return end
+    local alliance = resolveAlliance(player)
+
+    if not alliance then
+        invokeClientFunction(player, "onPreviewResultReceived", 0, 0, 0, 0, true)
+        return
+    end
+
+    local inv    = alliance:getInventory()
+    local counts = processTrashInInventory(inv, alliance, systemRarity, turretRarities, minTech, maxTech, types, false)
+
+    local total, trash, favorites = getInventoryStats(inv)
+    invokeClientFunction(player, "onInventoryStatsReceived", total, trash, favorites)
+    invokeClientFunction(player, "onPreviewResultReceived",
+        counts.total, counts.systems, counts.turrets, counts.templates, true)
+end
+
+callable(TrashMan, "onPreviewTrashPressedServer2")
 -- allianz-end
+
+function TrashMan.onRequestInitialData()
+    if onClient() then return end
+    local player = Player(callingPlayer)
+    if not player then return end
+
+    local inv = player:getInventory()
+    local total, trash, favorites = getInventoryStats(inv)
+    invokeClientFunction(player, "onInventoryStatsReceived", total, trash, favorites)
+
+    local s1 = loadPlayerPreset(player, 1)
+    local s2 = loadPlayerPreset(player, 2)
+    local s3 = loadPlayerPreset(player, 3)
+    invokeClientFunction(player, "onPresetsStatusReceived",
+        s1 ~= nil and s1 ~= "",
+        s2 ~= nil and s2 ~= "",
+        s3 ~= nil and s3 ~= "")
+end
+
+callable(TrashMan, "onRequestInitialData")
+
+function TrashMan.onSavePresetServer(slot, data)
+    if onClient() then return end
+    local player = Player(callingPlayer)
+    if not player then return end
+
+    if type(slot) ~= "number" or slot < 1 or slot > NUM_PRESETS then return end
+    if type(data) ~= "string" or data == "" then return end
+
+    local ok = savePlayerPreset(player, slot, data)
+    if ok then
+        invokeClientFunction(player, "onPresetSaved", slot)
+        player:sendChatMessage("Server", 0, "[Trash Manager] Filter preset #" .. slot .. " saved.")
+    else
+        player:sendChatMessage("Server", 1, "[Trash Manager] Could not save preset #" .. slot .. " (storage unavailable).")
+    end
+end
+
+callable(TrashMan, "onSavePresetServer")
+
+function TrashMan.onLoadPresetServer(slot)
+    if onClient() then return end
+    local player = Player(callingPlayer)
+    if not player then return end
+
+    if type(slot) ~= "number" or slot < 1 or slot > NUM_PRESETS then return end
+
+    local data = loadPlayerPreset(player, slot)
+    if data and data ~= "" then
+        invokeClientFunction(player, "onPresetLoaded", slot, data)
+        player:sendChatMessage("Server", 0, "[Trash Manager] Filter preset #" .. slot .. " loaded.")
+    else
+        player:sendChatMessage("Server", 1, "[Trash Manager] Preset #" .. slot .. " is empty.")
+    end
+end
+
+callable(TrashMan, "onLoadPresetServer")
 
 local function buildFilterRequest()
     local turretRarities = {}
-
     for mat = MaterialType.Iron, MaterialType.Avorion do
-        if checkBoxes[mat].checked then
-            turretRarities[mat] = listBoxes[mat].selectedIndex-1
+        if checkBoxes[mat] and checkBoxes[mat].checked then
+            turretRarities[mat] = listBoxes[mat].selectedIndex
         end
     end
 
@@ -395,38 +559,147 @@ local function buildFilterRequest()
         maxTech = maxTechBox.selectedIndex
     end
 
-    return (systemsBox.selectedIndex-2), turretRarities, minTech, maxTech
+    local types = {
+        turrets   = checkBoxTurrets   and checkBoxTurrets.checked   or false,
+        systems   = checkBoxSystems   and checkBoxSystems.checked   or false,
+        templates = checkBoxTemplates and checkBoxTemplates.checked or false,
+    }
+
+    -- selectedIndex 0 = "None" -> -1 (no systems).
+    -- selectedIndex 1 = Petty (value 0) -> rarity <= 0 marks Petty.
+    local sysRarity = systemsBox.selectedIndex - 1
+
+    return sysRarity, turretRarities, minTech, maxTech, types
 end
 
-function TrashMan.onPreviewResultReceived(itemsMatched, allianceMode)
+local function serializeUIState()
+    local parts = {}
+    parts[#parts+1] = tostring(systemsBox.selectedIndex)
+    parts[#parts+1] = (checkBoxAllianz[0] and checkBoxAllianz[0].checked) and "1" or "0"
+    parts[#parts+1] = (checkBoxTurrets   and checkBoxTurrets.checked)     and "1" or "0"
+    parts[#parts+1] = (checkBoxSystems   and checkBoxSystems.checked)     and "1" or "0"
+    parts[#parts+1] = (checkBoxTemplates and checkBoxTemplates.checked)   and "1" or "0"
+    parts[#parts+1] = tostring(minTechBox and minTechBox.selectedIndex or 0)
+    parts[#parts+1] = tostring(maxTechBox and maxTechBox.selectedIndex or 0)
+    for mat = MaterialType.Iron, MaterialType.Avorion do
+        local cb = checkBoxes[mat]
+        local lb = listBoxes[mat]
+        parts[#parts+1] = ((cb and cb.checked) and "1" or "0") .. "|" .. tostring(lb and lb.selectedIndex or 0)
+    end
+    return table.concat(parts, ",")
+end
+
+local function applyUIState(data)
+    if not data or data == "" then return end
+    local parts = {}
+    for v in data:gmatch("[^,]+") do parts[#parts+1] = v end
+    local i = 0
+    local function nextVal() i = i + 1; return parts[i] end
+
+    if systemsBox then systemsBox.selectedIndex = tonumber(nextVal()) or 0 else nextVal() end
+    if checkBoxAllianz[0] then checkBoxAllianz[0].checked = nextVal() == "1" else nextVal() end
+    if checkBoxTurrets    then checkBoxTurrets.checked    = nextVal() == "1" else nextVal() end
+    if checkBoxSystems    then checkBoxSystems.checked    = nextVal() == "1" else nextVal() end
+    if checkBoxTemplates  then checkBoxTemplates.checked  = nextVal() == "1" else nextVal() end
+    if minTechBox then minTechBox.selectedIndex = tonumber(nextVal()) or 0 else nextVal() end
+    if maxTechBox then maxTechBox.selectedIndex = tonumber(nextVal()) or 0 else nextVal() end
+    for mat = MaterialType.Iron, MaterialType.Avorion do
+        local token = nextVal() or "0|0"
+        local cbVal, lbVal = token:match("([^|]+)|([^|]+)")
+        if checkBoxes[mat] then checkBoxes[mat].checked = cbVal == "1" end
+        if listBoxes[mat]  then listBoxes[mat].selectedIndex = tonumber(lbVal) or 0 end
+    end
+end
+
+function TrashMan.onInventoryStatsReceived(total, trash, favorites)
+    if not statsLabel then return end
+    statsLabel.caption = string.format(
+        "Inventory: %d items   |   %d trash   |   %d favorites",
+        total or 0, trash or 0, favorites or 0)
+end
+
+function TrashMan.onPreviewResultReceived(total, countSystems, countTurrets, countTemplates, allianceMode)
     if not previewLabel then return end
     local scope = allianceMode and "alliance" or "private"
-    previewLabel.caption = string.format("Preview: %d items would be marked (%s)", itemsMatched or 0, scope)
+    if (total or 0) == 0 then
+        previewLabel.caption = string.format("Preview (%s): nothing would be marked.", scope)
+        previewLabel.color   = ColorRGB(0.7, 0.7, 0.7)
+    else
+        previewLabel.caption = string.format(
+            "Preview (%s): %d items -> %d turrets, %d systems, %d templates",
+            scope, total, countTurrets or 0, countSystems or 0, countTemplates or 0)
+        previewLabel.color = ColorRGB(1.0, 0.85, 0.4)
+    end
 end
 
-function TrashMan.onPreviewTrashPressed()
-    local systemRarity, turretRarities, minTech, maxTech = buildFilterRequest()
-    if checkBoxAllianz[0].checked then
-        invokeServerFunction("onPreviewTrashPressedServer2", systemRarity, turretRarities, minTech, maxTech)
-    else
-        invokeServerFunction("onPreviewTrashPressedServer1", systemRarity, turretRarities, minTech, maxTech)
+function TrashMan.onPresetsStatusReceived(s1, s2, s3)
+    local status = { s1, s2, s3 }
+    for i = 1, NUM_PRESETS do
+        if presetLabels[i] then
+            if status[i] then
+                presetLabels[i].caption = "* Saved"
+                presetLabels[i].color   = ColorRGB(0.35, 1.0, 0.45)
+            else
+                presetLabels[i].caption = "- empty -"
+                presetLabels[i].color   = ColorRGB(0.45, 0.45, 0.45)
+            end
+        end
+    end
+end
+
+function TrashMan.onPresetSaved(slot)
+    if presetLabels[slot] then
+        presetLabels[slot].caption = "* Saved"
+        presetLabels[slot].color   = ColorRGB(0.35, 1.0, 0.45)
+    end
+end
+
+function TrashMan.onPresetLoaded(slot, data)
+    applyUIState(data)
+    if previewLabel then
+        previewLabel.caption = "Preset #" .. tostring(slot) .. " loaded - run Preview to confirm."
+        previewLabel.color   = ColorRGB(0.6, 0.8, 1.0)
     end
 end
 
 function TrashMan.onMarkTrashPressed()
-    local systemRarity, turretRarities, minTech, maxTech = buildFilterRequest()
-
-    if checkBoxAllianz[0].checked then
-        invokeServerFunction("onMarkTrashPressedServer2", systemRarity, turretRarities, minTech, maxTech)
+    local sr, tr, mn, mx, ty = buildFilterRequest()
+    if checkBoxAllianz[0] and checkBoxAllianz[0].checked then
+        invokeServerFunction("onMarkTrashPressedServer2", sr, tr, mn, mx, ty)
     else
-        invokeServerFunction("onMarkTrashPressedServer1", systemRarity, turretRarities, minTech, maxTech)
+        invokeServerFunction("onMarkTrashPressedServer1", sr, tr, mn, mx, ty)
     end
 end
 
 function TrashMan.onUnmarkAllPressed()
-    if checkBoxAllianz[0].checked then
+    if checkBoxAllianz[0] and checkBoxAllianz[0].checked then
         invokeServerFunction("onUnmarkAllPressedServer2")
     else
         invokeServerFunction("onUnmarkAllPressedServer1")
     end
 end
+
+function TrashMan.onUnmarkFilteredPressed()
+    local sr, tr, mn, mx, ty = buildFilterRequest()
+    if checkBoxAllianz[0] and checkBoxAllianz[0].checked then
+        invokeServerFunction("onUnmarkFilteredPressedServer2", sr, tr, mn, mx, ty)
+    else
+        invokeServerFunction("onUnmarkFilteredPressedServer1", sr, tr, mn, mx, ty)
+    end
+end
+
+function TrashMan.onPreviewTrashPressed()
+    local sr, tr, mn, mx, ty = buildFilterRequest()
+    if checkBoxAllianz[0] and checkBoxAllianz[0].checked then
+        invokeServerFunction("onPreviewTrashPressedServer2", sr, tr, mn, mx, ty)
+    else
+        invokeServerFunction("onPreviewTrashPressedServer1", sr, tr, mn, mx, ty)
+    end
+end
+
+function TrashMan.onSavePreset1() invokeServerFunction("onSavePresetServer", 1, serializeUIState()) end
+function TrashMan.onSavePreset2() invokeServerFunction("onSavePresetServer", 2, serializeUIState()) end
+function TrashMan.onSavePreset3() invokeServerFunction("onSavePresetServer", 3, serializeUIState()) end
+function TrashMan.onLoadPreset1() invokeServerFunction("onLoadPresetServer", 1) end
+function TrashMan.onLoadPreset2() invokeServerFunction("onLoadPresetServer", 2) end
+function TrashMan.onLoadPreset3() invokeServerFunction("onLoadPresetServer", 3) end
