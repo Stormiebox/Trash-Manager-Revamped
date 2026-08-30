@@ -79,3 +79,11 @@ msgstr ""
 msgid "Filter Presets"
 msgstr ""
 
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+msgid "Consolidate Inventory to Vault"
+msgstr ""
+
+#: mods\Trash Manager Revamped\data\scripts\entity\TrashMan.lua:
+msgid "Transfers all unequipped, non-favorite turrets, blueprints, and subsystems from your private inventory directly into the Alliance Vault. Requires alliance membership. Items that are already equipped are not affected."
+msgstr ""
+

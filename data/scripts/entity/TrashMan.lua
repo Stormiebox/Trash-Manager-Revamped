@@ -50,7 +50,7 @@ end
 
 function TrashMan.initUI()
     local res  = getResolution()
-    local size = vec2(510, 775)
+    local size = vec2(510, 817)
     local menu = ScriptUI()
     window = menu:createWindow(Rect(res * 0.5 - size * 0.5, res * 0.5 + size * 0.5))
     menu:registerWindow(window, "Trash Man"%_t)
@@ -127,6 +127,12 @@ function TrashMan.initUI()
     window:createButton(Rect(c2+bw+bg,     py, c2+bw*2+bg,   py+32), "Unmark All"%_t,    "onUnmarkAllPressed").maxTextSize      = 13
     window:createButton(Rect(c2+bw*2+bg*2, py, c2+bw*3+bg*2, py+32), "Unmark Filter"%_t, "onUnmarkFilteredPressed").maxTextSize = 13
     window:createButton(Rect(c2+bw*3+bg*3, py, c2+bw*4+bg*3, py+32), "Preview"%_t,       "onPreviewTrashPressed").maxTextSize   = 13
+    py = py + dy + 4
+
+    -- Consolidate button (full width, always private->alliance)
+    local consolidateBtn = window:createButton(Rect(c2, py, c2 + 452, py + 32), "Consolidate Inventory to Vault"%_t, "onConsolidatePressed")
+    consolidateBtn.maxTextSize = 14
+    consolidateBtn.tooltip = "Transfers all unequipped, non-favorite turrets, blueprints, and subsystems from your private inventory directly into the Alliance Vault. Requires alliance membership. Items that are already equipped are not affected."%_t
     py = py + dy + 10
 
     -- Preview result label
@@ -542,6 +548,59 @@ end
 
 callable(TrashMan, "onLoadPresetServer")
 
+-- consolidate-start
+function TrashMan.onConsolidateServer()
+    if onClient() then return end
+    local player = Player(callingPlayer)
+    if not player then return end
+
+    local alliance = resolveAlliance(player)
+    if not alliance then return end
+
+    local inv        = player:getInventory()
+    local allianceInv = alliance:getInventory()
+    local moved      = 0
+    local dropped    = 0
+
+    for index, slotItem in pairs(inv:getItems()) do
+        local iitem = slotItem.item
+        if iitem ~= nil and not iitem.favorite then
+            local itype = iitem.itemType
+            if itype == InventoryItemType.Turret
+                or itype == InventoryItemType.TurretTemplate
+                or itype == InventoryItemType.SystemUpgrade then
+
+                local amount = inv:amount(index)
+                inv:removeAll(index)
+
+                for _ = 1, amount do
+                    -- addOrDrop: safely adds to alliance inventory;
+                    -- drops the item in space near the ship if the vault is completely full.
+                    local added = allianceInv:addOrDrop(iitem)
+                    if added then
+                        moved = moved + 1
+                    else
+                        dropped = dropped + 1
+                    end
+                end
+            end
+        end
+    end
+
+    local msg = string.format("[Trash Manager] %d item(s) consolidated to Alliance Vault.", moved)
+    if dropped > 0 then
+        msg = msg .. string.format(" %d item(s) dropped in space (vault full).", dropped)
+    end
+    player:sendChatMessage("Server", 0, msg)
+
+    -- Refresh the private inventory stats on the client.
+    local total, trash, favorites = getInventoryStats(inv)
+    invokeClientFunction(player, "onInventoryStatsReceived", total, trash, favorites)
+end
+
+callable(TrashMan, "onConsolidateServer")
+-- consolidate-end
+
 local function buildFilterRequest()
     local turretRarities = {}
     for mat = MaterialType.Iron, MaterialType.Avorion do
@@ -660,6 +719,12 @@ function TrashMan.onPresetLoaded(slot, data)
         previewLabel.caption = "Preset #" .. tostring(slot) .. " loaded - run Preview to confirm."
         previewLabel.color   = ColorRGB(0.6, 0.8, 1.0)
     end
+end
+
+function TrashMan.onConsolidatePressed()
+    -- Consolidate is always a one-way transfer: private inventory -> alliance vault.
+    -- It is not affected by the Alliance mode toggle (which controls trash marking scope).
+    invokeServerFunction("onConsolidateServer")
 end
 
 function TrashMan.onMarkTrashPressed()

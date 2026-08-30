@@ -20,6 +20,16 @@
 - Templates are tracked separately in Preview and Mark feedback messages.
 - The `Templates` item type toggle provides independent enable/disable control.
 
+#### Consolidate Inventory to Vault
+- Added a new **Consolidate Inventory to Vault** full-width button in the UI.
+- Instantly transfers all unequipped, non-favorite turrets, turret blueprints (templates), and system upgrades from the player's **private inventory** directly into the **Alliance Vault**.
+- Requires the player to be a member of an alliance with a reachable alliance inventory.
+- Items marked as favorites are always skipped and remain in the player's private inventory.
+- If the Alliance Vault is completely full, excess items are safely dropped near the ship in space (via `addOrDrop`) rather than lost.
+- The live inventory stats bar is automatically refreshed after the operation completes.
+- The button is always a one-way private→vault transfer regardless of the Alliance mode toggle state.
+- Chat feedback includes a count of items moved and a separate notice if any were dropped due to vault capacity.
+
 #### Unmark by Filter
 - Added a new **Unmark Filter** button alongside the existing action buttons.
 - Unlike **Unmark All** (which clears every trash flag unconditionally), **Unmark Filter** only untrashes items that currently match the active filter configuration.
